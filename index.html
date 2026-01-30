@@ -2188,7 +2188,7 @@
         <p>Upload your work below. We accept any format — PDF, deck, Notion export, Loom link, whatever works for you. Include your "How I Built This" summary either in your submission or in the notes field.</p>
       </div>
       <div class="form-card">
-        <form id="submission-form">
+        <form id="submission-form" action="https://formspree.io/f/maqjagga" method="POST" enctype="multipart/form-data">
           <div class="field">
             <label for="name">Name</label>
             <input type="text" id="name" name="name" required placeholder="Your full name">
@@ -2200,7 +2200,7 @@
           <div class="field">
             <label>Your work</label>
             <div class="upload-area" id="upload-area">
-              <input type="file" id="file" name="file" required>
+              <input type="file" id="file" name="attachment" required>
               <div class="upload-icon">📎</div>
               <p class="upload-text"><strong>Click to upload</strong> or drag and drop<br>Any file type accepted</p>
               <p class="file-selected" id="file-selected"></p>
@@ -2347,17 +2347,49 @@
       }
     });
 
-    // Form submission
-    document.getElementById('submission-form').addEventListener('submit', (e) => {
+    // Form submission with Formspree
+    document.getElementById('submission-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const formCard = document.querySelector('.form-card');
-      formCard.innerHTML = `
-        <div class="form-success">
-          <div class="success-icon"></div>
-          <h3>You're in!</h3>
-          <p>We've received your submission and we're excited to review it. You'll hear from us within 24 hours.</p>
-        </div>
-      `;
+
+      const form = e.target;
+      const formData = new FormData(form);
+      const submitBtn = form.querySelector('.submit-btn');
+
+      // Disable button and show loading state
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          // Success - show success message
+          const formCard = document.querySelector('.form-card');
+          formCard.innerHTML = `
+            <div class="form-success">
+              <div class="success-icon"></div>
+              <h3>You're in!</h3>
+              <p>We've received your submission and we're excited to review it. You'll hear from us within 24 hours.</p>
+            </div>
+          `;
+        } else {
+          // Error - show error message
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Submit your work';
+          alert('There was a problem submitting your form. Please try again or email us directly.');
+        }
+      } catch (error) {
+        // Network error
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit your work';
+        alert('There was a problem submitting your form. Please check your connection and try again.');
+      }
     });
 
     // Tilt effect on evaluation cards
